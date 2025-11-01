@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A* Algorithm Visualization | Smart Courier</title>
+    
+    <!-- Google Fonts - Lexend -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==================== VARIABLES & RESET ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #0f0f0f;
+            --color-bg-secondary: #1a1a1a;
+            --color-bg-tertiary: #242424;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #c0c0c0;
+            --color-text-tertiary: #808080;
+            --color-accent: #6366f1;
+            --color-accent-dark: #4f46e5;
+            --color-accent-light: #818cf8;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-border: #2d2d2d;
+            --color-hover: #333333;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --spacing-2xl: 4rem;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --transition-fast: 0.15s ease-in-out;
+            --transition-base: 0.3s ease-in-out;
+            --transition-slow: 0.5s ease-in-out;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.7);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ==================== NAVIGATION ==================== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--color-border);
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            padding: 0 var(--spacing-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, var(--color-accent-light), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: var(--spacing-xl);
+            flex: 1;
+            margin-left: var(--spacing-xl);
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            position: relative;
+            transition: color var(--transition-base);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent);
+            transition: width var(--transition-base);
+        }
+
+        .nav-links a:hover {
+            color: var(--color-accent);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* ==================== CONTAINER ==================== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+
+        main {
+            margin-top: 70px;
+            padding: var(--spacing-2xl) 0;
+            min-height: 100vh;
+        }
+
+        /* ==================== PAGE HEADER ==================== */
+        .page-header {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .page-subtitle {
+            color: var(--color-accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+            font-weight: 700;
+        }
+
+        .page-description {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ==================== MAIN LAYOUT ==================== */
+        .algorithm-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        /* ==================== VISUALIZATION PANEL ==================== */
+        .visualization-panel {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .panel-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .canvas-container {
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            position: relative;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        /* ==================== CONTROLS PANEL ==================== */
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+
+        .control-group {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .control-group label {
+            flex: 1;
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            display: block;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px var(--spacing-sm);
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            border-radius: var(--radius-md);
+            font-family: 'Lexend', sans-serif;
+            font-size: 0.95rem;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        select:hover,
+        input:hover {
+            border-color: var(--color-accent);
+        }
+
+        select:focus,
+        input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            background: var(--color-bg-secondary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-sm);
+        }
+
+        .btn {
+            padding: 12px var(--spacing-md);
+            border-radius: var(--radius-lg);
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-family: 'Lexend', sans-serif;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary {
+            background: var(--color-accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--color-accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--color-bg-tertiary);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--color-hover);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .speed-control {
+            margin-top: var(--spacing-md);
+        }
+
+        .slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--color-border);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        /* ==================== LISTS PANEL ==================== */
+        .lists-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .list-container {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .list-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .list-title-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 0.8rem;
+        }
+
+        .list-open .list-title-icon {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--color-accent);
+        }
+
+        .list-closed .list-title-icon {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--color-success);
+        }
+
+        .list-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: var(--spacing-sm);
+        }
+
+        .list-item {
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all var(--transition-base);
+            cursor: default;
+        }
+
+        .list-item-open {
+            border-color: var(--color-accent);
+            color: var(--color-accent-light);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .list-item-closed {
+            border-color: var(--color-success);
+            color: var(--color-success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .list-item-current {
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .list-empty {
+            color: var(--color-text-tertiary);
+            font-style: italic;
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+
+        /* ==================== TRACE TABLE ==================== */
+        .trace-panel {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .trace-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .trace-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .trace-table thead {
+            background: var(--color-bg-tertiary);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .trace-table th {
+            padding: var(--spacing-sm);
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .trace-table td {
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+        }
+
+        .trace-table tbody tr {
+            transition: all var(--transition-base);
+        }
+
+        .trace-table tbody tr:hover {
+            background: var(--color-bg-tertiary);
+        }
+
+        .trace-table tbody tr.current-trace {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 3px solid var(--color-accent);
+        }
+
+        .trace-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ==================== RESULT PANEL ==================== */
+        .result-panel {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            display: none;
+        }
+
+        .result-panel.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .result-path {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+
+        .result-path span {
+            color: var(--color-accent);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .result-stat {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+
+        .result-stat-label {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .result-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-accent);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1024px) {
+            .algorithm-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .lists-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.875rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .canvas-container {
+                height: 350px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="navbar-container">
+            <a class="logo" href="index.html">
+                <span class="logo-icon">📦</span>
+                <span class="logo-text">Smart Courier</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#algorithm">Algorithm</a></li>
+                <li><a href="algorithm.html" style="color: var(--color-accent);">Visualization</a></li>
+                <li><a href="comparison.html">Comparison</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <p class="page-subtitle">Interactive Visualization</p>
+                <h1 class="page-title">A* Algorithm Explorer</h1>
+                <p class="page-description">
+                    Watch the A* algorithm find the optimal path in real-time. Track node expansion, OPEN/CLOSED lists, and execution steps.
+                </p>
+            </div>
+
+            <!-- Main Algorithm Section -->
+            <div class="algorithm-layout">
+                <!-- Visualization -->
+                <div class="visualization-panel">
+                    <div class="panel-header">
+                        <span>🗺️</span>
+                        Graph Visualization
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="graphCanvas"></canvas>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>
+                                <span class="control-label">Start Node</span>
+                                <select id="startNode">
+                                    <option>A</option>
+                                    <option>B</option>
+                                    <option>C</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="control-group">
+                            <label>
+                                <span class="control-label">Goal Node</span>
+                                <select id="goalNode">
+                                    <option>G</option>
+                                    <option>F</option>
+                                    <option>I</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-primary" id="startBtn">Start</button>
+                            <button class="btn btn-secondary" id="pauseBtn" disabled>Pause</button>
+                        </div>
+                        <button class="btn btn-secondary" id="resetBtn" style="width: 100%;">Reset</button>
+
+                        <div class="speed-control">
+                            <span class="control-label">Execution Speed</span>
+                            <input type="range" id="speedSlider" class="slider" min="100" max="2000" value="500" step="100">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-text-tertiary); margin-top: var(--spacing-xs);">
+                                <span>Fast</span>
+                                <span>Slow</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="visualization-panel">
+                    <div class="panel-header">
+                        <span>📊</span>
+                        Algorithm Statistics
+                    </div>
+
+                    <div style="display: grid; gap: var(--spacing-md);">
+                        <div class="result-stat">
+                            <div class="result-stat-label">Current Node</div>
+                            <div class="result-stat-value" id="currentNode">-</div>
+                        </div>
+
+                        <div class="result-stat">
+                            <div class="result-stat-label">Path Cost (g)</div>
+                            <div class="result-stat-value" id="currentG">0.0</div>
+                        </div>
+
+                        <div class="result-stat">
+                            <div class="result-stat-label">Heuristic (h)</div>
+                            <div class="result-stat-value" id="currentH">0.0</div>
+                        </div>
+
+                        <div class="result-stat">
+                            <div class="result-stat-label">Total Cost (f)</div>
+                            <div class="result-stat-value" id="currentF">0.0</div>
+                        </div>
+
+                        <div class="result-stat">
+                            <div class="result-stat-label">Nodes Expanded</div>
+                            <div class="result-stat-value" id="nodesExpanded">0</div>
+                        </div>
+
+                        <div class="result-stat">
+                            <div class="result-stat-label">Status</div>
+                            <div style="font-size: 1.1rem; margin-top: var(--spacing-sm);" id="statusText">Idle</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPEN and CLOSED Lists -->
+            <div class="lists-panel">
+                <div class="list-container list-open">
+                    <div class="list-title">
+                        <div class="list-title-icon">📋</div>
+                        OPEN List
+                    </div>
+                    <div class="list-items" id="openList">
+                        <div class="list-empty">Waiting to start...</div>
+                    </div>
+                </div>
+
+                <div class="list-container list-closed">
+                    <div class="list-title">
+                        <div class="list-title-icon">✓</div>
+                        CLOSED List
+                    </div>
+                    <div class="list-items" id="closedList">
+                        <div class="list-empty">Waiting to start...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trace Table -->
+            <div class="trace-panel">
+                <div class="trace-title">📈 Execution Trace</div>
+                <div style="overflow-x: auto;">
+                    <table class="trace-table">
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Node</th>
+                                <th>g(n)</th>
+                                <th>h(n)</th>
+                                <th>f(n)</th>
+                                <th>OPEN Size</th>
+                                <th>CLOSED Size</th>
+                            </tr>
+                        </thead>
+                        <tbody id="traceBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--color-text-tertiary);">
+                                    Trace will appear here...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Result Panel -->
+            <div class="result-panel" id="resultPanel">
+                <div class="result-title">✓ Algorithm Complete!</div>
+                <div class="result-path">
+                    Path: <span id="finalPath">-</span>
+                </div>
+                <div class="result-grid">
+                    <div class="result-stat">
+                        <div class="result-stat-label">Total Cost</div>
+                        <div class="result-stat-value" id="finalCost">0.0</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-label">Nodes Expanded</div>
+                        <div class="result-stat-value" id="finalNodesExpanded">0</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-label">Steps Taken</div>
+                        <div class="result-stat-value" id="finalSteps">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- GSAP Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+
+    <script>
+        // ==================== GRAPH DATA ====================
+        const graphData = {
+            A: { x: 50, y: 150, neighbors: { B: 2.2, H: 2.2, C: 3.2 } },
+            B: { x: 150, y: 100, neighbors: { A: 2.2, C: 2.2, E: 1.4, H: 2.2, D: 2.2 } },
+            C: { x: 100, y: 250, neighbors: { A: 3.2, B: 2.2, E: 2.2 } },
+            D: { x: 250, y: 50, neighbors: { B: 2.2, E: 2.2, I: 2.2, G: 2.2, H: 2.2 } },
+            E: { x: 200, y: 150, neighbors: { B: 1.4, C: 2.2, D: 2.2, F: 2.2, I: 1.4 } },
+            F: { x: 300, y: 200, neighbors: { E: 2.2, I: 1.4, G: 2.2 } },
+            G: { x: 350, y: 100, neighbors: { D: 2.2, F: 2.2, I: 2.2 } },
+            H: { x: 150, y: 0, neighbors: { A: 2.2, B: 2.2, D: 2.2 } },
+            I: { x: 250, y: 150, neighbors: { D: 2.2, E: 1.4, F: 1.4, G: 2.2 } }
+        };
+
+        const heuristics = {
+            A: 6.1, B: 4.0, C: 5.4, D: 2.2, E: 3.2, F: 2.2, G: 0.0, H: 4.5, I: 2.2
+        };
+
+        // ==================== STATE VARIABLES ====================
+        let isRunning = false;
+        let isPaused = false;
+        let algorithmTrace = [];
+        let openList = [];
+        let closedList = [];
+        let currentNode = null;
+        let nodesExpanded = 0;
+        let executionSpeed = 500;
+
+        // ==================== CANVAS SETUP ====================
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 16;
+            canvas.height = rect.height - 16;
+            drawGraph();
+        }
+
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+
+        // ==================== CANVAS DRAWING ====================
+        function drawGraph() {
+            ctx.fillStyle = 'rgba(15, 15, 15, 0)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Scale and center the graph
+            const scale = Math.min(canvas.width, canvas.height) / 400;
+            const offsetX = (canvas.width - 400 * scale) / 2;
+            const offsetY = (canvas.height - 300 * scale) / 2;
+
+            // Draw edges
+            ctx.strokeStyle = '#2d2d2d';
+            ctx.lineWidth = 2;
+
+            Object.entries(graphData).forEach(([nodeA, dataA]) => {
+                Object.keys(dataA.neighbors).forEach(nodeB => {
+                    if (nodeA < nodeB) {
+                        const dataB = graphData[nodeB];
+                        const x1 = offsetX + dataA.x * scale;
+                        const y1 = offsetY + dataA.y * scale;
+                        const x2 = offsetX + dataB.x * scale;
+                        const y2 = offsetY + dataB.y * scale;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+
+                        // Draw edge label
+                        const cost = dataA.neighbors[nodeB];
+                        const midX = (x1 + x2) / 2;
+                        const midY = (y1 + y2) / 2;
+                        ctx.fillStyle = '#808080';
+                        ctx.font = '12px Lexend';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(cost.toFixed(1), midX, midY - 8);
+                    }
+                });
+            });
+
+            // Draw nodes
+            Object.entries(graphData).forEach(([nodeName, nodeData]) => {
+                const x = offsetX + nodeData.x * scale;
+                const y = offsetY + nodeData.y * scale;
+
+                let color = '#242424';
+                let textColor = '#ffffff';
+
+                if (currentNode === nodeName) {
+                    color = '#6366f1';
+                    ctx.shadowColor = 'rgba(99, 102, 241, 0.5)';
+                    ctx.shadowBlur = 15;
+                }
+
+                if (closedList.includes(nodeName)) {
+                    color = '#10b981';
+                }
+
+                // Draw node circle
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#6366f1';
+                ctx.lineWidth = currentNode === nodeName ? 3 : 1;
+                ctx.stroke();
+                ctx.shadowColor = 'transparent';
+
+                // Draw node label
+                ctx.fillStyle = textColor;
+                ctx.font = 'bold 14px Lexend';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(nodeName, x, y);
+            });
+        }
+
+        // ==================== ALGORITHM IMPLEMENTATION ====================
+        class AStarSearchVisualizer {
+            constructor(startNode, goalNode) {
+                this.startNode = startNode;
+                this.goalNode = goalNode;
+                this.openList = [{ node: startNode, g: 0, h: heuristics[startNode] }];
+                this.closedList = [];
+                this.trace = [];
+                this.nodesExpanded = 0;
+                this.parentMap = { [startNode]: null };
+            }
+
+            async execute() {
+                let step = 0;
+
+                while (this.openList.length > 0) {
+                    if (!isRunning) break;
+                    if (isPaused) {
+                        await new Promise(resolve => {
+                            const checkPause = setInterval(() => {
+                                if (!isPaused) {
+                                    clearInterval(checkPause);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    }
+
+                    // Sort OPEN list by f(n)
+                    this.openList.sort((a, b) => (a.g + a.h) - (b.g + b.h));
+                    const current = this.openList.shift();
+
+                    currentNode = current.node;
+                    nodesExpanded++;
+
+                    // Record trace
+                    this.trace.push({
+                        step: step++,
+                        node: current.node,
+                        g: current.g,
+                        h: current.h,
+                        f: current.g + current.h,
+                        openSize: this.openList.length,
+                        closedSize: this.closedList.length
+                    });
+
+                    updateUI(current, this.openList, this.closedList);
+
+                    if (current.node === this.goalNode) {
+                        return this.reconstructPath();
+                    }
+
+                    this.closedList.push(current.node);
+
+                    // Explore neighbors
+                    for (const [neighbor, cost] of Object.entries(graphData[current.node].neighbors)) {
+                        if (this.closedList.includes(neighbor)) continue;
+
+                        const newG = current.g + cost;
+                        const newH = heuristics[neighbor];
+                        const existingNode = this.openList.find(n => n.node === neighbor);
+
+                        if (existingNode) {
+                            if (newG < existingNode.g) {
+                                existingNode.g = newG;
+                                this.parentMap[neighbor] = current.node;
+                            }
+                        } else {
+                            this.openList.push({ node: neighbor, g: newG, h: newH });
+                            this.parentMap[neighbor] = current.node;
+                        }
+                    }
+
+                    await new Promise(resolve => setTimeout(resolve, executionSpeed));
+                }
+
+                return null;
+            }
+
+            reconstructPath() {
+                const path = [];
+                let current = this.goalNode;
+
+                while (current !== null) {
+                    path.unshift(current);
+                    current = this.parentMap[current];
+                }
+
+                return path;
+            }
+        }
+
+        // ==================== UI UPDATES ====================
+        function updateUI(current, openList, closedList) {
+            const f = current.g + current.h;
+
+            gsap.to('#currentNode', { duration: 0.3, innerHTML: current.node });
+            gsap.to('#currentG', { duration: 0.3, innerHTML: current.g.toFixed(1) });
+            gsap.to('#currentH', { duration: 0.3, innerHTML: current.h.toFixed(1) });
+            gsap.to('#currentF', { duration: 0.3, innerHTML: f.toFixed(1) });
+            gsap.to('#nodesExpanded', { duration: 0.3, innerHTML: nodesExpanded });
+
+            // Update OPEN list
+            const openListDiv = document.getElementById('openList');
+            openListDiv.innerHTML = '';
+
+            if (openList.length === 0) {
+                openListDiv.innerHTML = '<div class="list-empty">Empty</div>';
+            } else {
+                openList.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'list-item list-item-open';
+                    el.textContent = `${item.node} (${(item.g + item.h).toFixed(1)})`;
+                    openListDiv.appendChild(el);
+
+                    gsap.from(el, { duration: 0.3, opacity: 0, scale: 0.8 });
+                });
+            }
+
+            // Update CLOSED list
+            const closedListDiv = document.getElementById('closedList');
+            closedListDiv.innerHTML = '';
+
+            if (closedList.length === 0) {
+                closedListDiv.innerHTML = '<div class="list-empty">Empty</div>';
+            } else {
+                closedList.forEach(node => {
+                    const el = document.createElement('div');
+                    el.className = 'list-item list-item-closed';
+                    el.textContent = node;
+                    closedListDiv.appendChild(el);
+
+                    gsap.from(el, { duration: 0.3, opacity: 0, scale: 0.8 });
+                });
+            }
+
+            drawGraph();
+        }
+
+        function displayTrace(trace) {
+            const tbody = document.getElementById('traceBody');
+            tbody.innerHTML = '';
+
+            trace.forEach((step, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${step.step}</td>
+                    <td>${step.node}</td>
+                    <td>${step.g.toFixed(2)}</td>
+                    <td>${step.h.toFixed(2)}</td>
+                    <td>${step.f.toFixed(2)}</td>
+                    <td>${step.openSize}</td>
+                    <td>${step.closedSize}</td>
+                `;
+
+                gsap.from(row, { duration: 0.3, opacity: 0, y: 10 });
+                tbody.appendChild(row);
+            });
+        }
+
+        function displayResult(path, cost, trace) {
+            const resultPanel = document.getElementById('resultPanel');
+            resultPanel.classList.add('show');
+
+            document.getElementById('finalPath').textContent = path.join(' → ');
+            document.getElementById('finalCost').textContent = cost.toFixed(2);
+            document.getElementById('finalNodesExpanded').textContent = nodesExpanded;
+            document.getElementById('finalSteps').textContent = trace.length;
+
+            gsap.from(resultPanel, { duration: 0.5, opacity: 0, y: 20 });
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            isRunning = true;
+            isPaused = false;
+            nodesExpanded = 0;
+            currentNode = null;
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = true;
+            document.getElementById('startNode').disabled = true;
+            document.getElementById('goalNode').disabled = true;
+
+            const startNode = document.getElementById('startNode').value;
+            const goalNode = document.getElementById('goalNode').value;
+
+            document.getElementById('statusText').textContent = 'Running...';
+
+            const searcher = new AStarSearchVisualizer(startNode, goalNode);
+            const path = await searcher.execute();
+
+            if (path) {
+                const totalCost = searcher.trace[searcher.trace.length - 1].g;
+                displayTrace(searcher.trace);
+                displayResult(path, totalCost, searcher.trace);
+                document.getElementById('statusText').textContent = 'Complete ✓';
+            } else {
+                document.getElementById('statusText').textContent = 'No path found';
+            }
+
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = false;
+            document.getElementById('startNode').disabled = false;
+            document.getElementById('goalNode').disabled = false;
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').textContent = isPaused ? 'Resume' : 'Pause';
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            isRunning = false;
+            isPaused = false;
+            nodesExpanded = 0;
+            currentNode = null;
+            openList = [];
+            closedList = [];
+
+            document.getElementById('currentNode').textContent = '-';
+            document.getElementById('currentG').textContent = '0.0';
+            document.getElementById('currentH').textContent = '0.0';
+            document.getElementById('currentF').textContent = '0.0';
+            document.getElementById('nodesExpanded').textContent = '0';
+            document.getElementById('statusText').textContent = 'Idle';
+
+            document.getElementById('openList').innerHTML = '<div class="list-empty">Waiting to start...</div>';
+            document.getElementById('closedList').innerHTML = '<div class="list-empty">Waiting to start...</div>';
+            document.getElementById('traceBody').innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--color-text-tertiary);">Trace will appear here...</td></tr>';
+
+            document.getElementById('resultPanel').classList.remove('show');
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('startBtn').textContent = 'Start';
+            document.getElementById('pauseBtn').textContent = 'Pause';
+
+            drawGraph();
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            executionSpeed = parseInt(e.target.value);
+        });
+
+        // ==================== PAGE ANIMATIONS ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            gsap.from('.page-header', { duration: 0.8, opacity: 0, y: 30, ease: 'power2.out' });
+            gsap.from('.algorithm-layout > div', { duration: 0.8, opacity: 0, y: 30, delay: 0.2, ease: 'power2.out', stagger: 0.1 });
+            gsap.from('.lists-panel > div', { duration: 0.8, opacity: 0, y: 30, delay: 0.4, ease: 'power2.out', stagger: 0.1 });
+            gsap.from('.trace-panel', { duration: 0.8, opacity: 0, y: 30, delay: 0.6, ease: 'power2.out' });
+
+            gsap.registerPlugin(ScrollTrigger);
+        });
+    </script>
+</body>
+
+</html>

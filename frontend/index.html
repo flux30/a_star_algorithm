@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Courier | A* Route Optimization</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #0f0f0f;
+            --color-bg-secondary: #1a1a1a;
+            --color-bg-tertiary: #242424;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #c0c0c0;
+            --color-text-tertiary: #808080;
+            --color-accent: #6366f1;
+            --color-accent-dark: #4f46e5;
+            --color-accent-light: #818cf8;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-border: #2d2d2d;
+            --color-hover: #333333;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --spacing-2xl: 4rem;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --transition-fast: 0.15s ease-in-out;
+            --transition-base: 0.3s ease-in-out;
+            --transition-slow: 0.5s ease-in-out;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.7);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            letter-spacing: -0.015em;
+        }
+
+        h3 {
+            font-size: 1.875rem;
+            letter-spacing: -0.01em;
+        }
+
+        h4 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid-cols-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-xl);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--color-border);
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            padding: 0 var(--spacing-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, var(--color-accent-light), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: var(--spacing-xl);
+            flex: 1;
+            margin-left: var(--spacing-xl);
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            position: relative;
+            transition: color var(--transition-base);
+            cursor: pointer;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent);
+            transition: width var(--transition-base);
+        }
+
+        .nav-links a:hover {
+            color: var(--color-accent);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 70px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                ellipse 60% 80% at 50% 40%,
+                rgba(99, 102, 241, 0.1) 0%,
+                transparent 50%
+            );
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(45, 45, 45, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(45, 45, 45, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            padding: 0 var(--spacing-lg);
+        }
+
+        .hero-subtitle {
+            font-size: 1rem;
+            color: var(--color-accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+            line-height: 1.1;
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, var(--color-accent-light), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-xl);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-family: 'Lexend', sans-serif;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary {
+            background: var(--color-accent);
+            color: white;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-hover);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        .features {
+            padding: var(--spacing-2xl) 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .section-subtitle {
+            color: var(--color-accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .section-description {
+            font-size: 1.125rem;
+            color: var(--color-text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+        }
+
+        .feature-card {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-xl);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-card:hover {
+            background: var(--color-bg-tertiary);
+            border-color: var(--color-accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .feature-description {
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+
+        .showcase {
+            padding: var(--spacing-2xl) 0;
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+            margin: var(--spacing-2xl) 0;
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .showcase-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-2xl);
+            align-items: center;
+        }
+
+        .showcase-text h2 {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .showcase-text p {
+            margin-bottom: var(--spacing-md);
+            line-height: 1.8;
+        }
+
+        .algorithm-steps {
+            list-style: none;
+            margin: var(--spacing-xl) 0;
+        }
+
+        .algorithm-steps li {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            align-items: flex-start;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-text h4 {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .step-text p {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        .comparison {
+            padding: var(--spacing-2xl) 0;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+
+        .comparison-table thead {
+            background: var(--color-bg-tertiary);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .comparison-table th {
+            padding: var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .comparison-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+        }
+
+        .comparison-table tbody tr:hover {
+            background: var(--color-bg-tertiary);
+        }
+
+        .comparison-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--color-success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--color-warning);
+        }
+
+        .stats {
+            padding: var(--spacing-2xl) 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .stat-card {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-xl);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--color-accent);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .stat-label {
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .cta-section {
+            padding: var(--spacing-2xl);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            text-align: center;
+            margin: var(--spacing-2xl) 0;
+        }
+
+        .cta-section h2 {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .cta-section p {
+            margin-bottom: var(--spacing-xl);
+            font-size: 1.1rem;
+        }
+
+        footer {
+            background: var(--color-bg-secondary);
+            border-top: 1px solid var(--color-border);
+            padding: var(--spacing-xl) 0;
+            margin-top: var(--spacing-2xl);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-xl);
+        }
+
+        .footer-section h4 {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .footer-section p {
+            margin-bottom: var(--spacing-sm);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .footer-links a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color var(--transition-base);
+            cursor: pointer;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-accent);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--color-border);
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-xl);
+            text-align: center;
+            color: var(--color-text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 1.875rem; }
+            .nav-links { display: none; }
+            .hero-title { font-size: 2rem; }
+            .showcase-content { grid-template-columns: 1fr; }
+            .grid-cols-2 { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="navbar-container">
+            <a class="logo" href="#home">
+                <span class="logo-icon">📦</span>
+                <span class="logo-text">Smart Courier</span>
+            </a>
+            <ul class="nav-links">
+                <li><a onclick="navigateTo('home')">Home</a></li>
+                <li><a href="algorithm.html">Algorithm</a></li>
+                <li><a href="comparison.html">Comparison</a></li>
+                <li><a onclick="navigateTo('analysis')">Analysis</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="hero-background"></div>
+        <div class="hero-grid"></div>
+        <div class="hero-content">
+            <p class="hero-subtitle">Intelligent Route Optimization</p>
+            <h1 class="hero-title">
+                Smart <span>Courier</span> Delivery
+            </h1>
+            <p class="hero-description">
+                Discover how A* algorithm revolutionizes same-day delivery by finding optimal routes through intelligent heuristic search. Experience the future of logistics.
+            </p>
+            <div class="hero-cta">
+                <button class="btn btn-primary" onclick="window.location.href='algorithm.html'">
+                    Explore Algorithm →
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='comparison.html'">
+                    See Comparison
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle">Why A* Matters</p>
+                <h2 class="section-title">Advanced Path Finding</h2>
+                <p class="section-description">
+                    A* combines the best of both informed and uninformed search strategies to deliver optimal solutions efficiently.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Optimal Routes</h3>
+                    <p class="feature-description">
+                        Guarantees finding the shortest path while expanding fewer nodes than uninformed search methods.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">Heuristic Guided</h3>
+                    <p class="feature-description">
+                        Uses admissible heuristics to intelligently direct search towards the goal without overestimating costs.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Efficient Expansion</h3>
+                    <p class="feature-description">
+                        Expands fewer nodes compared to BFS/DFS, reducing computational overhead in real-world scenarios.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🚚</div>
+                    <h3 class="feature-title">Real-World Ready</h3>
+                    <p class="feature-description">
+                        Widely used in GPS navigation, ride-hailing, and logistics for reliable optimal path finding.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Transparent Search</h3>
+                    <p class="feature-description">
+                        Track OPEN/CLOSED lists and understand decision-making at every step of the algorithm.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3 class="feature-title">Customizable</h3>
+                    <p class="feature-description">
+                        Adapt heuristics and cost functions to different routing scenarios and constraints.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+        <section class="showcase" id="algorithm">
+        <div class="container">
+            <div class="showcase-content">
+                <div class="showcase-text">
+                    <h2>How A* Algorithm Works</h2>
+                    <p>
+                        A* combines actual cost from start (g(n)) with heuristic estimate to goal (h(n)). The algorithm maintains OPEN and CLOSED lists to track exploration progress.
+                    </p>
+
+                    <ul class="algorithm-steps">
+                        <li>
+                            <div class="step-number">1</div>
+                            <div class="step-text">
+                                <h4>Initialize Search</h4>
+                                <p>Place start node in OPEN list with g(n)=0 and h(n) estimated</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="step-number">2</div>
+                            <div class="step-text">
+                                <h4>Select Best Node</h4>
+                                <p>Pick node with lowest f(n) = g(n) + h(n) from OPEN list</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="step-number">3</div>
+                            <div class="step-text">
+                                <h4>Expand & Explore</h4>
+                                <p>Move selected node to CLOSED list and explore its neighbors</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="step-number">4</div>
+                            <div class="step-text">
+                                <h4>Reconstruct Path</h4>
+                                <p>When goal found, backtrack through parent pointers to get optimal route</p>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <button class="btn btn-primary" onclick="window.location.href='algorithm.html'">
+                        Run A* Visualization →
+                    </button>
+                </div>
+
+                <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--spacing-lg); height: 400px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="100%" height="100%" viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Title -->
+                        <text x="200" y="25" text-anchor="middle" font-size="16" font-weight="bold" fill="#818cf8">A* Pathfinding Network</text>
+
+                        <!-- Edges/Connections -->
+                        <line x1="70" y1="170" x2="170" y2="120" stroke="#2d2d2d" stroke-width="2"/>
+                        <line x1="70" y1="170" x2="120" y2="270" stroke="#2d2d2d" stroke-width="2"/>
+                        <line x1="170" y1="120" x2="220" y2="170" stroke="#2d2d2d" stroke-width="2"/>
+                        <line x1="120" y1="270" x2="220" y2="170" stroke="#2d2d2d" stroke-width="2"/>
+                        <line x1="220" y1="170" x2="320" y2="120" stroke="#6366f1" stroke-width="3"/>
+                        <line x1="220" y1="170" x2="280" y2="220" stroke="#2d2d2d" stroke-width="2"/>
+                        <line x1="280" y1="220" x2="320" y2="120" stroke="#6366f1" stroke-width="3"/>
+
+                        <!-- Edge Labels -->
+                        <text x="110" y="140" font-size="10" fill="#808080">2.2</text>
+                        <text x="85" y="230" font-size="10" fill="#808080">3.2</text>
+                        <text x="190" y="150" font-size="10" fill="#808080">1.4</text>
+                        <text x="170" y="230" font-size="10" fill="#808080">2.2</text>
+                        <text x="265" y="140" font-size="10" fill="#818cf8">2.2</text>
+                        <text x="250" y="200" font-size="10" fill="#808080">1.4</text>
+                        <text x="290" y="180" font-size="10" fill="#818cf8">2.2</text>
+
+                        <!-- Nodes -->
+                        <!-- Start Node (A) - Blue -->
+                        <circle cx="70" cy="170" r="18" fill="#6366f1" stroke="#818cf8" stroke-width="2"/>
+                        <text x="70" y="177" text-anchor="middle" font-size="14" font-weight="bold" fill="white">A</text>
+
+                        <!-- Open Nodes - Purple outline -->
+                        <circle cx="170" cy="120" r="18" fill="#242424" stroke="#818cf8" stroke-width="2"/>
+                        <text x="170" y="127" text-anchor="middle" font-size="14" font-weight="bold" fill="white">B</text>
+
+                        <circle cx="120" cy="270" r="18" fill="#242424" stroke="#818cf8" stroke-width="2"/>
+                        <text x="120" y="277" text-anchor="middle" font-size="14" font-weight="bold" fill="white">C</text>
+
+                        <!-- Explored Nodes - Green -->
+                        <circle cx="220" cy="170" r="18" fill="#10b981" stroke="#10b981" stroke-width="2"/>
+                        <text x="220" y="177" text-anchor="middle" font-size="14" font-weight="bold" fill="white">E</text>
+
+                        <circle cx="280" cy="220" r="18" fill="#10b981" stroke="#10b981" stroke-width="2"/>
+                        <text x="280" y="227" text-anchor="middle" font-size="14" font-weight="bold" fill="white">F</text>
+
+                        <!-- Goal Node (G) - Blue highlighted -->
+                        <circle cx="320" cy="120" r="18" fill="#6366f1" stroke="#818cf8" stroke-width="3"/>
+                        <text x="320" y="127" text-anchor="middle" font-size="14" font-weight="bold" fill="white">G</text>
+
+                        <!-- Legend -->
+                        <rect x="20" y="310" width="360" height="35" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" stroke-width="1" rx="5"/>
+                        
+                        <circle cx="35" cy="323" r="6" fill="#6366f1"/>
+                        <text x="50" y="327" font-size="11" fill="#c0c0c0">Start/Goal</text>
+
+                        <circle cx="140" cy="323" r="6" fill="#10b981"/>
+                        <text x="155" y="327" font-size="11" fill="#c0c0c0">Explored</text>
+
+                        <circle cx="260" cy="323" r="6" fill="#242424" stroke="#818cf8" stroke-width="1"/>
+                        <text x="275" y="327" font-size="11" fill="#c0c0c0">To Explore</text>
+
+                        <line x1="330" y1="320" x2="360" y2="320" stroke="#6366f1" stroke-width="2"/>
+                        <text x="330" y="335" font-size="11" fill="#c0c0c0">Final Path</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="comparison" id="comparison">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle">Performance Analysis</p>
+                <h2 class="section-title">A* vs Other Algorithms</h2>
+                <p class="section-description">
+                    Compare the efficiency and effectiveness of different search strategies on our courier network.
+                </p>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Optimal Path</th>
+                        <th>Nodes Expanded</th>
+                        <th>Efficiency</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>A*</strong></td>
+                        <td><span class="badge badge-success">✓ Yes</span></td>
+                        <td><strong>8</strong></td>
+                        <td><span class="badge badge-success">Excellent</span></td>
+                        <td>Production Systems</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Breadth-First Search</strong></td>
+                        <td><span class="badge badge-success">✓ Yes</span></td>
+                        <td><strong>15</strong></td>
+                        <td><span class="badge badge-warning">Good</span></td>
+                        <td>Unweighted Graphs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Depth-First Search</strong></td>
+                        <td><span class="badge badge-warning">⚠ Maybe</span></td>
+                        <td><strong>12</strong></td>
+                        <td><span class="badge badge-warning">Fair</span></td>
+                        <td>Memory Limited</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="stats" style="margin-top: var(--spacing-2xl);">
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">A* Nodes Expanded</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">BFS Nodes Expanded</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">DFS Nodes Expanded</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">87%</div>
+                    <div class="stat-label">Efficiency Gain</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="analysis" id="analysis">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle">Deep Dive</p>
+                <h2 class="section-title">Key Insights</h2>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3 class="feature-title">Admissible Heuristics</h3>
+                    <p class="feature-description">
+                        Euclidean distance never overestimates actual cost, ensuring A* finds the optimal solution while exploring fewer nodes than uninformed search.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3 class="feature-title">Scalability</h3>
+                    <p class="feature-description">
+                        As network complexity increases, A* outperformance grows exponentially compared to BFS and DFS approaches.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3 class="feature-title">Industry Applications</h3>
+                    <p class="feature-description">
+                        Powers Google Maps, Uber routing, Amazon logistics, and all modern navigation systems worldwide.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Explore?</h2>
+            <p>
+                Dive deeper into the world of intelligent pathfinding and optimize delivery routes with advanced algorithms.
+            </p>
+            <button class="btn btn-primary" onclick="window.location.href='algorithm.html'">
+                Try Interactive Demo →
+            </button>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Smart Courier</h4>
+                <p>
+                    An educational project demonstrating A* algorithm implementation for intelligent route optimization in logistics.
+                </p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a onclick="navigateTo('home')">Home</a></li>
+                    <li><a onclick="navigateTo('algorithm')">Algorithm</a></li>
+                    <li><a onclick="navigateTo('comparison')">Comparison</a></li>
+                    <li><a onclick="navigateTo('analysis')">Analysis</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul class="footer-links">
+                    <li><a href="algorithm.html">Visualization</a></li>
+                    <li><a href="comparison.html">Comparison</a></li>
+                    <li><a href="#">Documentation</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Smart Courier | IHC Modular Assignment. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function navigateTo(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    </script>
+</body>
+
+</html>

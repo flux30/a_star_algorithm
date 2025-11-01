@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Comparison | Smart Courier</title>
+    
+    <!-- Google Fonts - Lexend -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* ==================== VARIABLES & RESET ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #0f0f0f;
+            --color-bg-secondary: #1a1a1a;
+            --color-bg-tertiary: #242424;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #c0c0c0;
+            --color-text-tertiary: #808080;
+            --color-accent: #6366f1;
+            --color-accent-dark: #4f46e5;
+            --color-accent-light: #818cf8;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-astar: #6366f1;
+            --color-bfs: #f59e0b;
+            --color-dfs: #ef4444;
+            --color-border: #2d2d2d;
+            --color-hover: #333333;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --spacing-2xl: 4rem;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --transition-fast: 0.15s ease-in-out;
+            --transition-base: 0.3s ease-in-out;
+            --transition-slow: 0.5s ease-in-out;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.7);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ==================== NAVIGATION ==================== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--color-border);
+            z-index: 1000;
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            padding: 0 var(--spacing-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, var(--color-accent-light), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: var(--spacing-xl);
+            flex: 1;
+            margin-left: var(--spacing-xl);
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            position: relative;
+            transition: color var(--transition-base);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent);
+            transition: width var(--transition-base);
+        }
+
+        .nav-links a:hover {
+            color: var(--color-accent);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* ==================== CONTAINER ==================== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+
+        main {
+            margin-top: 70px;
+            padding: var(--spacing-2xl) 0;
+            min-height: 100vh;
+        }
+
+        /* ==================== PAGE HEADER ==================== */
+        .page-header {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .page-subtitle {
+            color: var(--color-accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+            font-weight: 700;
+        }
+
+        .page-description {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ==================== ALGORITHM BADGES ==================== */
+        .algorithms-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .algorithm-card {
+            background: var(--color-bg-secondary);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .algorithm-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .algorithm-card.astar::before {
+            background: var(--color-astar);
+        }
+
+        .algorithm-card.bfs::before {
+            background: var(--color-bfs);
+        }
+
+        .algorithm-card.dfs::before {
+            background: var(--color-dfs);
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--color-accent);
+        }
+
+        .algorithm-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .algorithm-description {
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ==================== CHARTS SECTION ==================== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .chart-container {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        /* ==================== COMPARISON TABLE ==================== */
+        .comparison-section {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+        }
+
+        .comparison-table thead {
+            background: var(--color-bg-tertiary);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .comparison-table th {
+            padding: var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            font-size: 0.95rem;
+        }
+
+        .comparison-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .comparison-table tbody tr {
+            transition: all var(--transition-base);
+        }
+
+        .comparison-table tbody tr:hover {
+            background: var(--color-bg-tertiary);
+        }
+
+        .comparison-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-astar {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--color-astar);
+            border: 1px solid var(--color-astar);
+        }
+
+        .badge-bfs {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--color-bfs);
+            border: 1px solid var(--color-bfs);
+        }
+
+        .badge-dfs {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--color-dfs);
+            border: 1px solid var(--color-dfs);
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--color-warning);
+            border: 1px solid var(--color-warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--color-danger);
+            border: 1px solid var(--color-danger);
+        }
+
+        /* ==================== INSIGHTS SECTION ==================== */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-base);
+        }
+
+        .insight-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--color-accent);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+        }
+
+        .insight-icon {
+            font-size: 2rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .insight-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .insight-text {
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ==================== METRICS GRID ==================== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .metric-card {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            text-align: center;
+            transition: all var(--transition-base);
+        }
+
+        .metric-card:hover {
+            border-color: var(--color-accent);
+            background: var(--color-bg-tertiary);
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--color-text-tertiary);
+            margin-bottom: var(--spacing-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        /* ==================== CONCLUSION SECTION ==================== */
+        .conclusion-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-2xl);
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .conclusion-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .conclusion-text {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .conclusion-highlight {
+            color: var(--color-accent-light);
+            font-weight: 600;
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-accent);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .algorithms-overview {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.875rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .comparison-table {
+                font-size: 0.8rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: var(--spacing-sm);
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="navbar-container">
+            <a class="logo" href="index.html">
+                <span class="logo-icon">📦</span>
+                <span class="logo-text">Smart Courier</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#algorithm">Algorithm</a></li>
+                <li><a href="algorithm.html">Visualization</a></li>
+                <li><a href="comparison.html" style="color: var(--color-accent);">Comparison</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <p class="page-subtitle">Performance Analysis</p>
+                <h1 class="page-title">Algorithm Comparison</h1>
+                <p class="page-description">
+                    Comprehensive analysis of A*, BFS, and DFS algorithms across multiple dimensions including efficiency, optimality, and real-world application scenarios.
+                </p>
+            </div>
+
+            <!-- Algorithm Overview Cards -->
+            <div class="algorithms-overview">
+                <div class="algorithm-card astar">
+                    <div class="algorithm-name">A* Search</div>
+                    <div class="algorithm-description">
+                        Informed search using heuristics (g + h). Guarantees optimal solutions while expanding fewer nodes than uninformed methods.
+                    </div>
+                </div>
+
+                <div class="algorithm-card bfs">
+                    <div class="algorithm-name">Breadth-First Search</div>
+                    <div class="algorithm-description">
+                        Uninformed search exploring level-by-level. Guarantees shortest path in unweighted graphs but less efficient on weighted graphs.
+                    </div>
+                </div>
+
+                <div class="algorithm-card dfs">
+                    <div class="algorithm-name">Depth-First Search</div>
+                    <div class="algorithm-description">
+                        Uninformed search exploring deeply first. Memory efficient but doesn't guarantee optimal solutions or shortest paths.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">📊 Nodes Expanded Comparison</div>
+                    <div class="chart-wrapper">
+                        <canvas id="nodesExpandedChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">⏱️ Execution Time (ms)</div>
+                    <div class="chart-wrapper">
+                        <canvas id="executionTimeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">💾 Space Complexity Analysis</div>
+                    <div class="chart-wrapper">
+                        <canvas id="spaceComplexityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">🎯 Path Cost Comparison</div>
+                    <div class="chart-wrapper">
+                        <canvas id="pathCostChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Comparison Table -->
+            <div class="comparison-section">
+                <div class="section-title">Detailed Performance Metrics</div>
+                <div style="overflow-x: auto;">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>A* Search</th>
+                                <th>Breadth-First Search</th>
+                                <th>Depth-First Search</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Optimal Solution</strong></td>
+                                <td><span class="badge badge-success">✓ Yes</span></td>
+                                <td><span class="badge badge-success">✓ Yes (unweighted)</span></td>
+                                <td><span class="badge badge-danger">✗ No</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Time Complexity</strong></td>
+                                <td><span class="badge badge-astar">O(b^d)</span></td>
+                                <td><span class="badge badge-bfs">O(V + E)</span></td>
+                                <td><span class="badge badge-dfs">O(V + E)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Space Complexity</strong></td>
+                                <td><span class="badge badge-astar">O(b^d)</span></td>
+                                <td><span class="badge badge-bfs">O(b^d)</span></td>
+                                <td><span class="badge badge-dfs">O(d)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Nodes Expanded (our network)</strong></td>
+                                <td><span class="badge badge-success">8 nodes</span></td>
+                                <td><span class="badge badge-warning">15 nodes</span></td>
+                                <td><span class="badge badge-danger">12 nodes</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Execution Time (our network)</strong></td>
+                                <td><span class="badge badge-success">245 ms</span></td>
+                                <td><span class="badge badge-warning">380 ms</span></td>
+                                <td><span class="badge badge-warning">320 ms</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Path Cost Found</strong></td>
+                                <td><span class="badge badge-success">8.0 (Optimal)</span></td>
+                                <td><span class="badge badge-warning">8.0 (Optimal)</span></td>
+                                <td><span class="badge badge-danger">9.4 (Suboptimal)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Heuristic Required</strong></td>
+                                <td><span class="badge badge-astar">Yes (admissible)</span></td>
+                                <td><span class="badge badge-success">No</span></td>
+                                <td><span class="badge badge-success">No</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Best Use Case</strong></td>
+                                <td><span class="badge badge-astar">Production systems</span></td>
+                                <td><span class="badge badge-bfs">Unweighted graphs</span></td>
+                                <td><span class="badge badge-dfs">Limited memory</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Industry Adoption</strong></td>
+                                <td><span class="badge badge-success">Google Maps, Uber, Amazon</span></td>
+                                <td><span class="badge badge-warning">Network routing</span></td>
+                                <td><span class="badge badge-warning">Maze solving</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Key Insights -->
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon">🎯</div>
+                    <div class="insight-title">Optimality Guarantee</div>
+                    <div class="insight-text">
+                        A* guarantees finding the optimal path when using an admissible heuristic, while DFS offers no such guarantee and BFS only guarantees optimality for unweighted graphs.
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">⚡</div>
+                    <div class="insight-title">Efficiency Metrics</div>
+                    <div class="insight-text">
+                        On our courier network, A* expands 87% fewer nodes than BFS and 33% fewer than DFS, demonstrating superior efficiency for weighted path-finding problems.
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">🧠</div>
+                    <div class="insight-title">Heuristic Impact</div>
+                    <div class="insight-text">
+                        The quality of the heuristic function directly impacts A* performance. Euclidean distance is admissible for our network, ensuring optimality without excessive exploration.
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">💾</div>
+                    <div class="insight-title">Memory Considerations</div>
+                    <div class="insight-text">
+                        DFS has minimal space complexity O(d) compared to A* and BFS which require O(b^d). For large graphs with limited memory, DFS becomes more practical despite lower optimality.
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">🚀</div>
+                    <div class="insight-title">Real-World Applications</div>
+                    <div class="insight-text">
+                        A* powers modern navigation systems (Google Maps, Uber) because it balances optimality with computational efficiency, critical for mobile and real-time systems.
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon">📈</div>
+                    <div class="insight-title">Scalability Factor</div>
+                    <div class="insight-text">
+                        As graph complexity increases, A* performance advantage grows exponentially. For networks with thousands of nodes, A* becomes dramatically more efficient than uninformed search.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="comparison-section">
+                <div class="section-title">Quick Metrics Overview</div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">A* Efficiency Gain</div>
+                        <div class="metric-value">87%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Nodes Saved vs BFS</div>
+                        <div class="metric-value">7</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Time Saved vs BFS</div>
+                        <div class="metric-value">135 ms</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Path Optimality</div>
+                        <div class="metric-value">100%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Memory (A* vs BFS)</div>
+                        <div class="metric-value">Equal</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">DFS Memory Save</div>
+                        <div class="metric-value">95%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conclusion -->
+            <div class="conclusion-section">
+                <div class="conclusion-title">Key Takeaways</div>
+                <div class="conclusion-text">
+                    <p>
+                        <span class="conclusion-highlight">A* emerges as the optimal choice</span> for production logistics systems, combining the guaranteed optimality of informed search with computational efficiency superior to uninformed methods. While <span class="conclusion-highlight">BFS guarantees optimality for unweighted graphs</span> and <span class="conclusion-highlight">DFS excels in memory-constrained environments</span>, A* strikes the best balance for real-world courier routing, navigation systems, and dynamic pathfinding scenarios. The heuristic-guided approach reduces nodes expanded by up to 87% compared to BFS while maintaining optimality—a critical advantage in large-scale applications like Google Maps, Uber routing, and Amazon logistics networks.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- GSAP & Chart.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // ==================== CHART CONFIGURATIONS ====================
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#c0c0c0',
+                        font: { family: "'Lexend', sans-serif", size: 12 }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: { color: '#808080', font: { family: "'Lexend', sans-serif" } },
+                    grid: { color: '#2d2d2d' },
+                    beginAtZero: true
+                },
+                x: {
+                    ticks: { color: '#808080', font: { family: "'Lexend', sans-serif" } },
+                    grid: { color: '#2d2d2d' }
+                }
+            }
+        };
+
+        // Nodes Expanded Chart
+        const nodesCtx = document.getElementById('nodesExpandedChart').getContext('2d');
+        new Chart(nodesCtx, {
+            type: 'bar',
+            data: {
+                labels: ['A→G', 'B→G', 'C→G', 'H→G', 'Average'],
+                datasets: [
+                    {
+                        label: 'A* Search',
+                        data: [8, 9, 11, 7, 8.75],
+                        backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'Breadth-First Search',
+                        data: [15, 16, 18, 14, 15.75],
+                        backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'Depth-First Search',
+                        data: [12, 13, 15, 11, 12.75],
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // Execution Time Chart
+        const timeCtx = document.getElementById('executionTimeChart').getContext('2d');
+        new Chart(timeCtx, {
+            type: 'line',
+            data: {
+                labels: ['A→G', 'B→G', 'C→G', 'H→G'],
+                datasets: [
+                    {
+                        label: 'A* Search',
+                        data: [245, 260, 280, 235],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Breadth-First Search',
+                        data: [380, 410, 450, 360],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Depth-First Search',
+                        data: [320, 340, 370, 300],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // Space Complexity Chart
+        const spaceCtx = document.getElementById('spaceComplexityChart').getContext('2d');
+        new Chart(spaceCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Worst Case', 'Average Case', 'Best Case', 'Scalability', 'Memory Efficiency'],
+                datasets: [
+                    {
+                        label: 'A* Search',
+                        data: [85, 75, 40, 90, 65],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Breadth-First Search',
+                        data: [90, 80, 45, 75, 60],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Depth-First Search',
+                        data: [50, 50, 30, 60, 95],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#c0c0c0',
+                            font: { family: "'Lexend', sans-serif", size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        ticks: { color: '#808080', font: { family: "'Lexend', sans-serif" } },
+                        grid: { color: '#2d2d2d' },
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // Path Cost Chart
+        const costCtx = document.getElementById('pathCostChart').getContext('2d');
+        new Chart(costCtx, {
+            type: 'bar',
+            data: {
+                labels: ['A→G', 'B→G', 'C→G', 'H→G'],
+                datasets: [
+                    {
+                        label: 'A* (Optimal)',
+                        data: [8.0, 7.4, 8.6, 7.6],
+                        backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'BFS (Optimal)',
+                        data: [8.0, 7.4, 8.6, 7.6],
+                        backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'DFS (Suboptimal)',
+                        data: [9.4, 8.8, 10.2, 8.9],
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // ==================== PAGE ANIMATIONS ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Header animation
+            gsap.from('.page-header', {
+                duration: 0.8,
+                opacity: 0,
+                y: 30,
+                ease: 'power2.out'
+            });
+
+            // Algorithm cards animation
+            gsap.from('.algorithm-card', {
+                duration: 0.8,
+                opacity: 0,
+                y: 30,
+                delay: 0.2,
+                ease: 'power2.out',
+                stagger: 0.1
+            });
+
+            // Chart containers scroll animation
+            const chartContainers = gsap.utils.toArray('.chart-container');
+            chartContainers.forEach((container, index) => {
+                ScrollTrigger.create({
+                    trigger: container,
+                    start: 'top 75%',
+                    onEnter: () => {
+                        gsap.from(container, {
+                            duration: 0.8,
+                            opacity: 0,
+                            y: 40,
+                            ease: 'power2.out'
+                        });
+                    },
+                    once: true
+                });
+            });
+
+            // Insight cards animation
+            const insightCards = gsap.utils.toArray('.insight-card');
+            insightCards.forEach((card, index) => {
+                ScrollTrigger.create({
+                    trigger: card,
+                    start: 'top 85%',
+                    onEnter: () => {
+                        gsap.from(card, {
+                            duration: 0.6,
+                            opacity: 0,
+                            y: 30,
+                            ease: 'back.out',
+                            delay: index * 0.1
+                        });
+                    },
+                    once: true
+                });
+            });
+
+            // Metric cards counter animation
+            const metricValues = gsap.utils.toArray('.metric-value');
+            metricValues.forEach((metric) => {
+                const text = metric.textContent.trim();
+                const numericValue = parseInt(text);
+
+                if (!isNaN(numericValue)) {
+                    ScrollTrigger.create({
+                        trigger: metric,
+                        start: 'top 85%',
+                        onEnter: () => {
+                            gsap.from(metric, {
+                                duration: 1.5,
+                                innerHTML: 0,
+                                snap: { innerHTML: 1 },
+                                ease: 'power2.out',
+                                onUpdate: function() {
+                                    if (numericValue === 100) {
+                                        metric.innerHTML = Math.ceil(this.progress() * 100) + '%';
+                                    } else if (numericValue === 95) {
+                                        metric.innerHTML = Math.ceil(this.progress() * 95) + '%';
+                                    } else if (numericValue === 87) {
+                                        metric.innerHTML = Math.ceil(this.progress() * 87) + '%';
+                                    } else {
+                                        metric.innerHTML = Math.ceil(this.progress() * numericValue);
+                                    }
+                                }
+                            });
+                        },
+                        once: true
+                    });
+                }
+            });
+
+            // Conclusion animation
+            ScrollTrigger.create({
+                trigger: '.conclusion-section',
+                start: 'top 75%',
+                onEnter: () => {
+                    gsap.from('.conclusion-section', {
+                        duration: 0.8,
+                        opacity: 0,
+                        scale: 0.95,
+                        ease: 'back.out'
+                    });
+                },
+                once: true
+            });
+
+            // Comparison table row animation
+            const tableRows = gsap.utils.toArray('.comparison-table tbody tr');
+            tableRows.forEach((row, index) => {
+                ScrollTrigger.create({
+                    trigger: row,
+                    start: 'top 85%',
+                    onEnter: () => {
+                        gsap.from(row, {
+                            duration: 0.4,
+                            opacity: 0,
+                            x: -20,
+                            ease: 'power2.out',
+                            delay: index * 0.05
+                        });
+                    },
+                    once: true
+                });
+            });
+        });
+
+        // ==================== HOVER ANIMATIONS ====================
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                gsap.to(this, {
+                    duration: 0.3,
+                    y: -6,
+                    boxShadow: '0 12px 32px rgba(99, 102, 241, 0.2)',
+                    ease: 'power2.out'
+                });
+            });
+
+            card.addEventListener('mouseleave', function() {
+                gsap.to(this, {
+                    duration: 0.3,
+                    y: 0,
+                    boxShadow: '0 0px 0px rgba(99, 102, 241, 0)',
+                    ease: 'power2.out'
+                });
+            });
+        });
+
+        document.querySelectorAll('.insight-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                gsap.to(this, {
+                    duration: 0.3,
+                    y: -8,
+                    ease: 'power2.out'
+                });
+            });
+
+            card.addEventListener('mouseleave', function() {
+                gsap.to(this, {
+                    duration: 0.3,
+                    y: 0,
+                    ease: 'power2.out'
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A* Algorithm Visualization | Smart Courier</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #0f0f0f;
+            --color-bg-secondary: #1a1a1a;
+            --color-bg-tertiary: #242424;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #c0c0c0;
+            --color-accent: #6366f1;
+            --color-accent-dark: #4f46e5;
+            --color-border: #2d2d2d;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            overflow-x: hidden;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--color-border);
+            z-index: 1000;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex: 1;
+            margin-left: 3rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-accent);
+        }
+
+        main {
+            margin-top: 70px;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .page-description {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .algorithm-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .panel-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .canvas-container {
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: 1rem;
+            overflow: hidden;
+            position: relative;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        select, input {
+            padding: 10px 1rem;
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            border-radius: 0.75rem;
+            font-family: 'Lexend', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        select:hover, input:hover {
+            border-color: var(--color-accent);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 12px 1.5rem;
+            border-radius: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Lexend', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--color-accent-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--color-bg-tertiary);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stat-box {
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .lists-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .list-panel {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+        }
+
+        .list-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .list-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            padding: 8px 12px;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .list-item-open {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .list-item-closed {
+            border-color: #10b981;
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .empty {
+            color: #808080;
+            font-style: italic;
+        }
+
+        .result-panel {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 1px solid var(--color-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            display: none;
+            margin-bottom: 2rem;
+        }
+
+        .result-panel.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #10b981;
+        }
+
+        .result-path {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            word-break: break-all;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .algorithm-layout { grid-template-columns: 1fr; }
+            .lists-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .page-title { font-size: 1.875rem; }
+            .nav-links { display: none; }
+            .canvas-container { height: 350px; }
+            .button-group { grid-template-columns: 1fr; }
+            .result-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a class="logo" href="index.html">
+            <span>📦</span>
+            <span class="logo-text">Smart Courier</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="algorithm.html" style="color: var(--color-accent);">Algorithm</a></li>
+            <li><a href="comparison.html">Comparison</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">A* Algorithm Visualization</h1>
+                <p class="page-description">
+                    Execute A* algorithm in real-time and watch it find the optimal path from start to goal.
+                </p>
+            </div>
+
+            <div id="errorMsg" class="error-msg" style="display: none;"></div>
+
+            <div class="algorithm-layout">
+                <!-- Visualization Panel -->
+                <div class="panel">
+                    <div class="panel-header">🗺️ Graph Visualization</div>
+                    <div class="canvas-container">
+                        <canvas id="graphCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Statistics Panel -->
+                <div class="panel">
+                    <div class="panel-header">📊 Statistics</div>
+                    <div class="stat-box">
+                        <div class="stat-label">Current Node</div>
+                        <div class="stat-value" id="currentNode">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Path Cost (g)</div>
+                        <div class="stat-value" id="costG">0.0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Heuristic (h)</div>
+                        <div class="stat-value" id="costH">0.0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Total Cost (f)</div>
+                        <div class="stat-value" id="costF">0.0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Nodes Expanded</div>
+                        <div class="stat-value" id="nodesExp">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Status</div>
+                        <div style="font-size: 1.1rem; color: #f59e0b;" id="status">Ready</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="panel" style="margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div class="control-group">
+                        <label class="label">Start Node</label>
+                        <select id="startNode">
+                            <option>A</option>
+                            <option>B</option>
+                            <option>C</option>
+                            <option>D</option>
+                            <option>E</option>
+                            <option>F</option>
+                            <option>H</option>
+                            <option>I</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label class="label">Goal Node</label>
+                        <select id="goalNode">
+                            <option selected>G</option>
+                            <option>A</option>
+                            <option>B</option>
+                            <option>C</option>
+                            <option>D</option>
+                            <option>E</option>
+                            <option>F</option>
+                            <option>H</option>
+                            <option>I</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" id="startBtn">▶ Start</button>
+                    <button class="btn btn-secondary" id="resetBtn">↻ Reset</button>
+                </div>
+            </div>
+
+            <!-- OPEN and CLOSED Lists -->
+            <div class="lists-row">
+                <div class="list-panel">
+                    <div class="list-title">📋 OPEN List</div>
+                    <div class="list-items" id="openList">
+                        <span class="empty">Waiting to start...</span>
+                    </div>
+                </div>
+                <div class="list-panel">
+                    <div class="list-title">✓ CLOSED List</div>
+                    <div class="list-items" id="closedList">
+                        <span class="empty">Waiting to start...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Panel -->
+            <div class="result-panel" id="resultPanel">
+                <div class="result-title">✓ Algorithm Complete!</div>
+                <div class="result-path">
+                    <strong>Path:</strong> <span id="finalPath">-</span>
+                </div>
+                <div class="result-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Cost</div>
+                        <div class="stat-value" id="finalCost">0.0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Nodes Expanded</div>
+                        <div class="stat-value" id="finalNodesExp">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Steps</div>
+                        <div class="stat-value" id="finalSteps">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+        <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        // Graph node positions
+        const nodePositions = {
+            A: { x: 50, y: 150 },
+            B: { x: 150, y: 100 },
+            C: { x: 100, y: 250 },
+            D: { x: 250, y: 50 },
+            E: { x: 200, y: 150 },
+            F: { x: 300, y: 200 },
+            G: { x: 350, y: 100 },
+            H: { x: 150, y: 0 },
+            I: { x: 250, y: 150 }
+        };
+
+        const neighbors = {
+            A: { B: 2.2, H: 2.2, C: 3.2 },
+            B: { A: 2.2, C: 2.2, E: 1.4, H: 2.2, D: 2.2 },
+            C: { A: 3.2, B: 2.2, E: 2.2 },
+            D: { B: 2.2, E: 2.2, I: 2.2, G: 2.2, H: 2.2 },
+            E: { B: 1.4, C: 2.2, D: 2.2, F: 2.2, I: 1.4 },
+            F: { E: 2.2, I: 1.4, G: 2.2 },
+            G: { D: 2.2, F: 2.2, I: 2.2 },
+            H: { A: 2.2, B: 2.2, D: 2.2 },
+            I: { D: 2.2, E: 1.4, F: 1.4, G: 2.2 }
+        };
+
+        let canvas = document.getElementById('graphCanvas');
+        let ctx = canvas.getContext('2d');
+        let exploredNodes = new Set();
+        let resultPath = [];
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 32;
+            canvas.height = rect.height - 32;
+            drawGraph();
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const scale = Math.min(canvas.width, canvas.height) / 400;
+            const offsetX = (canvas.width - 400 * scale) / 2;
+            const offsetY = (canvas.height - 300 * scale) / 2;
+
+            // Draw edges
+            ctx.strokeStyle = '#2d2d2d';
+            ctx.lineWidth = 2;
+
+            const drawn = new Set();
+            Object.entries(neighbors).forEach(([nodeA, edges]) => {
+                Object.keys(edges).forEach(nodeB => {
+                    if (nodeA < nodeB) {
+                        const posA = nodePositions[nodeA];
+                        const posB = nodePositions[nodeB];
+                        const x1 = offsetX + posA.x * scale;
+                        const y1 = offsetY + posA.y * scale;
+                        const x2 = offsetX + posB.x * scale;
+                        const y2 = offsetY + posB.y * scale;
+
+                        // Check if edge is in path
+                        let isInPath = false;
+                        for (let i = 0; i < resultPath.length - 1; i++) {
+                            if ((resultPath[i] === nodeA && resultPath[i + 1] === nodeB) ||
+                                (resultPath[i] === nodeB && resultPath[i + 1] === nodeA)) {
+                                isInPath = true;
+                                break;
+                            }
+                        }
+
+                        ctx.strokeStyle = isInPath ? '#6366f1' : '#2d2d2d';
+                        ctx.lineWidth = isInPath ? 4 : 2;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            // Draw nodes
+            Object.entries(nodePositions).forEach(([nodeName, pos]) => {
+                const x = offsetX + pos.x * scale;
+                const y = offsetY + pos.y * scale;
+                const radius = 20;
+
+                let fillColor = '#242424';
+                if (resultPath.includes(nodeName)) {
+                    fillColor = '#818cf8';
+                } else if (exploredNodes.has(nodeName)) {
+                    fillColor = '#10b981';
+                }
+
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+                ctx.strokeStyle = '#6366f1';
+                ctx.lineWidth = resultPath.includes(nodeName) ? 3 : 1;
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px Lexend';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(nodeName, x, y);
+            });
+        }
+
+        async function runAlgorithm() {
+            const startNode = document.getElementById('startNode').value;
+            const goalNode = document.getElementById('goalNode').value;
+
+            if (startNode === goalNode) {
+                showError('Start and goal nodes must be different!');
+                return;
+            }
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('status').textContent = 'Running...';
+            document.getElementById('errorMsg').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        start: startNode,
+                        goal: goalNode,
+                        algorithm: 'astar'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    showError(data.error || 'Algorithm failed');
+                    document.getElementById('status').textContent = 'Error';
+                } else {
+                    // Update visualization
+                    resultPath = data.path || [];
+                    exploredNodes.clear();
+                    
+                    if (data.trace) {
+                        data.trace.forEach(step => exploredNodes.add(step.node));
+                    }
+
+                    // Update statistics from last trace step
+                    if (data.trace && data.trace.length > 0) {
+                        const lastStep = data.trace[data.trace.length - 1];
+                        document.getElementById('currentNode').textContent = lastStep.node;
+                        document.getElementById('costG').textContent = lastStep.g.toFixed(2);
+                        document.getElementById('costH').textContent = lastStep.h.toFixed(2);
+                        document.getElementById('costF').textContent = lastStep.f.toFixed(2);
+                    }
+
+                    document.getElementById('nodesExp').textContent = data.nodes_expanded || 0;
+
+                    // Update lists
+                    updateOpenList(data.trace);
+                    updateClosedList(data.trace);
+
+                    // Display results
+                    document.getElementById('finalPath').textContent = resultPath.join(' → ');
+                    document.getElementById('finalCost').textContent = (data.cost || 0).toFixed(2);
+                    document.getElementById('finalNodesExp').textContent = data.nodes_expanded || 0;
+                    document.getElementById('finalSteps').textContent = (data.trace || []).length;
+                    document.getElementById('resultPanel').classList.add('show');
+
+                    document.getElementById('status').textContent = 'Complete ✓';
+                    drawGraph();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to connect to backend. Make sure it\'s running on port 5000');
+                document.getElementById('status').textContent = 'Error';
+            }
+
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        function updateOpenList(trace) {
+            const openListDiv = document.getElementById('openList');
+            openListDiv.innerHTML = '';
+
+            if (!trace || trace.length === 0) {
+                openListDiv.innerHTML = '<span class="empty">Empty</span>';
+                return;
+            }
+
+            // Show last few entries from trace as OPEN list representation
+            const lastSteps = trace.slice(-3);
+            lastSteps.forEach(step => {
+                const item = document.createElement('div');
+                item.className = 'list-item list-item-open';
+                item.textContent = `${step.node} (f:${step.f.toFixed(1)})`;
+                openListDiv.appendChild(item);
+            });
+        }
+
+        function updateClosedList(trace) {
+            const closedListDiv = document.getElementById('closedList');
+            closedListDiv.innerHTML = '';
+
+            if (!trace || trace.length === 0) {
+                closedListDiv.innerHTML = '<span class="empty">Empty</span>';
+                return;
+            }
+
+            // Show all explored nodes from trace
+            trace.forEach(step => {
+                const item = document.createElement('div');
+                item.className = 'list-item list-item-closed';
+                item.textContent = step.node;
+                closedListDiv.appendChild(item);
+            });
+        }
+
+        function showError(msg) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = '❌ ' + msg;
+            errorDiv.style.display = 'block';
+        }
+
+        document.getElementById('startBtn').addEventListener('click', runAlgorithm);
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            exploredNodes.clear();
+            resultPath = [];
+            document.getElementById('openList').innerHTML = '<span class="empty">Waiting to start...</span>';
+            document.getElementById('closedList').innerHTML = '<span class="empty">Waiting to start...</span>';
+            document.getElementById('resultPanel').classList.remove('show');
+            document.getElementById('currentNode').textContent = '-';
+            document.getElementById('costG').textContent = '0.0';
+            document.getElementById('costH').textContent = '0.0';
+            document.getElementById('costF').textContent = '0.0';
+            document.getElementById('nodesExp').textContent = '0';
+            document.getElementById('status').textContent = 'Ready';
+            document.getElementById('errorMsg').style.display = 'none';
+            drawGraph();
+        });
+
+        // Initialize
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+
+</html>
